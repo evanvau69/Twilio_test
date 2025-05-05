@@ -208,7 +208,7 @@ async def permitted_users(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 def main():
     keep_alive()
-    TOKEN = "8018963341:AAFBirbNovfFyvlzf_EBDrBsv8qPW5IpIDA"
+    TOKEN = "7253583924:AAENVbdYNjHdbKHV0SJhnhoomyeOM2YeLXc"
     app = Application.builder().token(TOKEN).build()
 
     app.add_handler(CommandHandler("start", start))
