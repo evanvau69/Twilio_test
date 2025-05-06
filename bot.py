@@ -5,6 +5,7 @@ from keep_alive import keep_alive
 from datetime import timedelta
 import time
 import logging
+import asyncio
 
 logging.basicConfig(level=logging.INFO)
 
@@ -41,7 +42,7 @@ def permission_required(func):
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "স্বাগতম Evan Bot-এ 🌸!\n\n"
+        "স্বাগতম Evan Bot-এ 🟢!\n\n"
         "/login <SID> <TOKEN>\n"
         "/buy_number <Area Code>\n"
         "/show_messages\n"
@@ -261,6 +262,37 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
             fail += 1
     await update.message.reply_text(f"✅ পাঠানো হয়েছে: {success}, ❌ ব্যর্থ: {fail}")
 
+# New /my_time Command
+@permission_required
+async def my_time(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    expire_time = user_permissions.get(user_id, 0)
+    now = time.time()
+    if expire_time == float("inf"):
+        duration = "Unlimited"
+    else:
+        remaining = expire_time - now
+        if remaining <= 0:
+            duration = "Expired"
+        else:
+            duration = str(timedelta(seconds=int(remaining)))
+    
+    keyboard = InlineKeyboardMarkup([
+        [InlineKeyboardButton("Refresh", callback_data="REFRESH_TIME")],
+    ])
+    
+    msg = await update.message.reply_text(
+        f"⏳ আপনার সময় বাকি: {duration}",
+        reply_markup=keyboard
+    )
+    
+    # Auto delete message after 10 seconds
+    await asyncio.sleep(10)
+    try:
+        await msg.delete()
+    except:
+        pass
+
 # Button callback
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -304,46 +336,52 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "1d": (86400, "1 Day", "$2"),
             "7d": (604800, "7 Day", "$10"),
             "15d": (1296000, "15 Day", "$15"),
-            "30d": (2592000, "30 Day", "$20")
+            "30d": (2592000, "30 Day", "$20"),
         }
-        if plan == "1h":
-            if user_id in user_used_free_plan:
-                await query.edit_message_text("আপনি ইতিমধ্যেই ফ্রি প্লান ব্যবহার করেছেন।")
-                return
-            user_used_free_plan.add(user_id)
-            user_permissions[user_id] = time.time() + 3600
-            await query.edit_message_text("✅ আপনি ১ ঘন্টার জন্য ফ্রি প্লান একটিভ করেছেন।")
-            return
         if plan in prices:
-            _, label, cost = prices[plan]
-            msg = (
-                f"Please send {cost} to Binance Pay ID: 469628989\n"
-                f"পেমেন্ট করার পর প্রুভ পাঠান Admin কে\n\n"
-                f"User ID: {user_id}\nUsername: {username}\nPlan: {label} - {cost}"
-            )
-            await query.edit_message_text(msg)
+            seconds, name, price = prices[plan]
+            user_permissions[user_id] = time.time() + seconds
+            await query.edit_message_text(f"✅ {username} সফলভাবে {name} প্ল্যান কিনেছেন! মূল্য: {price}")
+        else:
+            await query.edit_message_text("❌ ভুল প্ল্যান।")
+    elif data == "REFRESH_TIME":
+        expire_time = user_permissions.get(user_id, 0)
+        now = time.time()
+        if expire_time == float("inf"):
+            duration = "Unlimited"
+        else:
+            remaining = expire_time - now
+            if remaining <= 0:
+                duration = "Expired"
+            else:
+                duration = str(timedelta(seconds=int(remaining)))
+        await query.edit_message_text(f"⏳ আপনি বটটি আর ব্যবহার করতে পারবেন: {duration}")
+    
 
-# Start bot
+# Main function
 def main():
+    application = Application.builder().token("7253583924:AAENVbdYNjHdbKHV0SJhnhoomyeOM2YeLXc").build()
+
+    # Add handlers
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("grant", grant))
+    application.add_handler(CommandHandler("active_users", active_users))
+    application.add_handler(CommandHandler("login", login))
+    application.add_handler(CommandHandler("buy_number", buy_number))
+    application.add_handler(CommandHandler("show_messages", show_messages))
+    application.add_handler(CommandHandler("delete_number", delete_number))
+    application.add_handler(CommandHandler("my_numbers", my_numbers))
+    application.add_handler(CommandHandler("add_admin", add_admin))
+    application.add_handler(CommandHandler("remove_admin", remove_admin))
+    application.add_handler(CommandHandler("list_admins", list_admins))
+    application.add_handler(CommandHandler("broadcast", broadcast))
+    application.add_handler(CommandHandler("my_time", my_time))
+
+    application.add_handler(CallbackQueryHandler(button_handler))
+
+    # Keep the bot alive
     keep_alive()
-    TOKEN = "7253583924:AAENVbdYNjHdbKHV0SJhnhoomyeOM2YeLXc"
-    app = Application.builder().token(TOKEN).build()
-
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("grant", grant))
-    app.add_handler(CommandHandler("active_users", active_users))
-    app.add_handler(CommandHandler("login", login))
-    app.add_handler(CommandHandler("buy_number", buy_number))
-    app.add_handler(CommandHandler("show_messages", show_messages))
-    app.add_handler(CommandHandler("delete_number", delete_number))
-    app.add_handler(CommandHandler("my_numbers", my_numbers))
-    app.add_handler(CommandHandler("add_admin", add_admin))
-    app.add_handler(CommandHandler("remove_admin", remove_admin))
-    app.add_handler(CommandHandler("list_admins", list_admins))
-    app.add_handler(CommandHandler("broadcast", broadcast))
-    app.add_handler(CallbackQueryHandler(button_handler))
-
-    app.run_polling()
+    application.run_polling()
 
 if __name__ == "__main__":
     main()
