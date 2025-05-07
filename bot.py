@@ -42,7 +42,7 @@ def permission_required(func):
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "স্বাগতম Evan Bot-এ 🔵 কাজ করার জন্য নিচের কমান্ড গুলো ব্যবহার করতে পারেন!\n\n"
+        "স্বাগতম Evan Bot-এ ✅ কাজ করার জন্য নিচের কমান্ড গুলো ব্যবহার করতে পারেন!\n\n"
         "/login <SID> <TOKEN>\n"
         "/buy_number <Area Code>\n"
         "/show_messages\n"
@@ -124,45 +124,47 @@ async def login(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # List of some common Canadian area codes
 CANADIAN_AREA_CODES = [
-    "416", "905", "647", "514", "438", "604", "780", "403", "587", "613", "819", "514", "905", "289", "236", "604"
+    "204", "226", "236", "249", "250", "289", "306", "343", "365",
+    "387", "403", "416", "418", "431", "437", "438", "450", "506",
+    "514", "519", "548", "579", "581", "587", "604", "613", "639",
+    "647", "672", "705", "709", "742", "778", "782", "807", "819",
+    "825", "867", "873", "902", "905"
 ]
 
 @permission_required
 async def buy_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not context.args:
-        # No area code provided, so randomly pick one from Canadian area codes
-        area_code = random.choice(CANADIAN_AREA_CODES)
-    else:
-        area_code = context.args[0]
-    
     user_id = update.effective_user.id
     client = user_clients.get(user_id)
+
     if not client:
         await update.message.reply_text("⚠️ আগে /login করুন।")
         return
 
-    try:
-        # Fetch available numbers for the selected area code
-        numbers = client.available_phone_numbers("CA").local.list(area_code=area_code, limit=10)
-        if not numbers:
-            await update.message.reply_text(f"এলাকা কোড {area_code} এর জন্য কোনো নাম্বার পাওয়া যায়নি।")
-            return
-        
-        # Store the available numbers for this user
-        user_available_numbers[user_id] = [n.phone_number for n in numbers]
-        
-        # Prepare the button for selecting a phone number
-        keyboard = [[InlineKeyboardButton(n.phone_number, callback_data=f"BUY:{n.phone_number}")] for n in numbers]
-        keyboard.append([InlineKeyboardButton("Cancel ❌", callback_data="CANCEL")])
+    if context.args:
+        area_codes = [context.args[0]]
+    else:
+        area_codes = CANADIAN_AREA_CODES.copy()
+        random.shuffle(area_codes)
 
-        # Send the available numbers to the user
-        await update.message.reply_text(
-            f"এলাকা কোড {area_code} থেকে নিচের নাম্বারগুলো পাওয়া গেছে:\n\n" + "\n".join(user_available_numbers[user_id]),
-            reply_markup=InlineKeyboardMarkup(keyboard)
-        )
-    except Exception as e:
-        logging.exception("Buy number error:")
-        await update.message.reply_text(f"সমস্যা: {e}")
+    found = False
+    for area_code in area_codes:
+        try:
+            numbers = client.available_phone_numbers("CA").local.list(area_code=area_code, limit=10)
+            if numbers:
+                found = True
+                user_available_numbers[user_id] = [n.phone_number for n in numbers]
+                keyboard = [[InlineKeyboardButton(n.phone_number, callback_data=f"BUY:{n.phone_number}")] for n in numbers]
+                keyboard.append([InlineKeyboardButton("❌ Cancel", callback_data="CANCEL")])
+
+                message = f"📞 Area Code: {area_code}\n\n" + "\n".join(user_available_numbers[user_id])
+                await update.message.reply_text(message, reply_markup=InlineKeyboardMarkup(keyboard))
+
+        except Exception as e:
+            logging.exception(f"Error fetching numbers for area code {area_code}")
+
+    if not found:
+        await update.message.reply_text("😔 কোনো Canadian নাম্বার পাওয়া যায়নি, পরে আবার চেষ্টা করুন।")
+
 
 
 # Show messages
