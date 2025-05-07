@@ -5,7 +5,7 @@ from keep_alive import keep_alive
 from datetime import timedelta
 import time
 import logging
-import asyncio
+import random
 
 logging.basicConfig(level=logging.INFO)
 
@@ -33,7 +33,7 @@ def permission_required(func):
                 [InlineKeyboardButton("30 Day - $20", callback_data="PLAN:30d")],
             ]
             await (update.message or update.callback_query).reply_text(
-                "Bot ржПрж░ Subscription ржХрж┐ржирж╛рж░ ржЬржирзНржп ржирж┐ржЪрзЗрж░ ржмрж╛ржЯржирзЗ ржХрзНрж▓рж┐ржХ ржХрж░рзБржи:",
+                "Bot এর Subscription কিনার জন্য নিচের বাটনে ক্লিক করুন:",
                 reply_markup=InlineKeyboardMarkup(keyboard)
             )
             return
@@ -42,7 +42,7 @@ def permission_required(func):
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "স্বাগতম Evan Bot-এ 🌸 কাজ করার জন্য নিচের কমান্ড গুলো ব্যবহার করতে পারেন!!\n\n"
+        "স্বাগতম Evan Bot-এ 🟢 কাজ করার জন্য নিচের কমান্ড গুলো ব্যবহার করতে পারেন!\n\n"
         "/login <SID> <TOKEN>\n"
         "/buy_number <Area Code>\n"
         "/show_messages\n"
@@ -55,10 +55,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def grant(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     if user_id not in ADMIN_IDS:
-        await update.message.reply_text("тЭМ ржЖржкржирж┐ ржПржЗ ржХржорж╛ржирзНржб ржмрзНржпржмрж╣рж╛рж░ ржХрж░рждрзЗ ржкрж╛рж░ржмрзЗржи ржирж╛ред")
+        await update.message.reply_text("❌ আপনি এই কমান্ড ব্যবহার করতে পারবেন না।")
         return
     if len(context.args) != 2:
-        await update.message.reply_text("ржмрзНржпржмрж╣рж╛рж░: /grant <user_id> <duration> (ржпрзЗржоржи 3d)")
+        await update.message.reply_text("ব্যবহার: /grant <user_id> <duration> (যেমন 3d)")
         return
     try:
         target_id = int(context.args[0])
@@ -71,22 +71,22 @@ async def grant(update: Update, context: ContextTypes.DEFAULT_TYPE):
             amount = int(duration[:-1])
             seconds = amount * unit_map[unit]
         user_permissions[target_id] = time.time() + seconds
-        await update.message.reply_text(f"тЬЕ {target_id} ржХрзЗ {duration} рж╕ржорзЯрзЗрж░ ржЬржирзНржп ржкрж╛рж░ржорж┐рж╢ржи ржжрзЗржУрзЯрж╛ рж╣рзЯрзЗржЫрзЗред")
+        await update.message.reply_text(f"✅ {target_id} কে {duration} সময়ের জন্য পারমিশন দেওয়া হয়েছে।")
     except:
-        await update.message.reply_text("тЭМ ржнрзБрж▓ ржлрж░ржорзНржпрж╛ржЯред ржмрзНржпржмрж╣рж╛рж░ ржХрж░рзБржи m, h, d, w, mo")
+        await update.message.reply_text("❌ ভুল ফরম্যাট। ব্যবহার করুন m, h, d, w, mo")
 
 # Active user list
 async def active_users(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS:
-        await update.message.reply_text("тЭМ ржЖржкржирж┐ ржПржЗ ржХржорж╛ржирзНржб ржмрзНржпржмрж╣рж╛рж░ ржХрж░рждрзЗ ржкрж╛рж░ржмрзЗржи ржирж╛ред")
+        await update.message.reply_text("❌ আপনি এই কমান্ড ব্যবহার করতে পারবেন না।")
         return
     now = time.time()
     active = {uid: exp for uid, exp in user_permissions.items() if exp > now or exp == float("inf")}
     if not active:
-        await update.message.reply_text("ржХрзЛржирзЛ Active Permission ржЗржЙржЬрж╛рж░ ржирзЗржЗред")
+        await update.message.reply_text("কোনো Active Permission ইউজার নেই।")
         return
 
-    msg = "тЬЕ Active Permission ржЗржЙржЬрж╛рж░ рж▓рж┐рж╕рзНржЯ тЬЕ\n\n"
+    msg = "✅ Active Permission ইউজার লিস্ট ✅\n\n"
     for uid, exp in active.items():
         try:
             user = await context.bot.get_chat(uid)
@@ -98,10 +98,10 @@ async def active_users(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         duration = "Unlimited" if exp == float("inf") else str(timedelta(seconds=int(exp - now)))
         msg += (
-            f"ЁЯСд Name: {name}\n"
-            f"ЁЯЖФ ID: {uid}\n"
-            f"ЁЯФЧ Username: {username}\n"
-            f"тП│ Time Left: {duration}\n\n"
+            f"👤 Name: {name}\n"
+            f"🆔 ID: {uid}\n"
+            f"🔗 Username: {username}\n"
+            f"⏳ Time Left: {duration}\n\n"
         )
     await update.message.reply_text(msg)
 
@@ -109,157 +109,157 @@ async def active_users(update: Update, context: ContextTypes.DEFAULT_TYPE):
 @permission_required
 async def login(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(context.args) != 2:
-        await update.message.reply_text("ржмрзНржпржмрж╣рж╛рж░: /login <SID> <AUTH_TOKEN>")
+        await update.message.reply_text("ব্যবহার: /login <SID> <AUTH_TOKEN>")
         return
     sid, token = context.args
     try:
         client = Client(sid, token)
         client.api.accounts(sid).fetch()
         user_clients[update.effective_user.id] = client
-        await update.message.reply_text("тЬЕ рж▓ржЧржЗржи рж╕ржлрж▓!")
+        await update.message.reply_text("✅ লগইন সফল!")
     except Exception as e:
         logging.exception("Login error:")
-        await update.message.reply_text(f"рж▓ржЧржЗржи ржмрзНржпрж░рзНрже: {e}")
+        await update.message.reply_text(f"লগইন ব্যর্থ: {e}")
 
-# Buy number
+# Buy number with random area code if not provided
 @permission_required
 async def buy_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not context.args:
+        # Randomly select a Canada area code from a predefined list
+        canada_area_codes = ["416", "905", "514", "604", "403", "613", "905", "819", "289", "514"]
+        random_area_code = random.choice(canada_area_codes)
+        area_code = random_area_code
+        await update.message.reply_text(f"আপনি Area Code প্রদান করেননি। র‍্যান্ডম কানাডা Area Code {area_code} সিলেক্ট করা হয়েছে।")
+    else:
+        area_code = context.args[0]
+
     user_id = update.effective_user.id
     client = user_clients.get(user_id)
-
     if not client:
-        await update.message.reply_text("тЪая╕П ржЖржЧрзЗ /login ржХрж░рзБржиред")
+        await update.message.reply_text("⚠️ আগে /login করুন।")
         return
 
     try:
-        if context.args:
-            # ржЗржЙржЬрж╛рж░ ржпржжрж┐ Area Code ржжрзЗрзЯ
-            area_code = context.args[0]
-            numbers = client.available_phone_numbers("CA").local.list(area_code=area_code, limit=10)
-        else:
-            # ржЗржЙржЬрж╛рж░ ржпржжрж┐ ржХрж┐ржЫрзБ ржирж╛ ржжрзЗрзЯ, рждрж╛рж╣рж▓рзЗ рж░тАНрзНржпрж╛ржирзНржбржо ржХрж┐ржЫрзБ CA ржирж╛ржорзНржмрж╛рж░
-            numbers = client.available_phone_numbers("CA").local.list(limit=10)
-
+        numbers = client.available_phone_numbers("CA").local.list(area_code=area_code, limit=10)
         if not numbers:
-            await update.message.reply_text("ржирж╛ржорзНржмрж╛рж░ ржкрж╛ржУрзЯрж╛ ржпрж╛рзЯржирж┐ред")
+            await update.message.reply_text("নাম্বার পাওয়া যায়নি।")
             return
-
+        
         user_available_numbers[user_id] = [n.phone_number for n in numbers]
         keyboard = [[InlineKeyboardButton(n.phone_number, callback_data=f"BUY:{n.phone_number}")] for n in numbers]
-        keyboard.append([InlineKeyboardButton("Cancel тЭМ", callback_data="CANCEL")])
-
+        keyboard.append([InlineKeyboardButton("Cancel ❌", callback_data="CANCEL")])
         await update.message.reply_text(
-            "ржирж┐ржЪрзЗрж░ ржирж╛ржорзНржмрж╛рж░ржЧрзБрж▓рзЛ ржкрж╛ржУрзЯрж╛ ржЧрзЗржЫрзЗ:\n\n" + "\n".join(user_available_numbers[user_id]),
+            f"নিচের নাম্বারগুলো পাওয়া গেছে (Area Code: {area_code}):\n\n" + "\n".join(user_available_numbers[user_id]),
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
-
     except Exception as e:
         logging.exception("Buy number error:")
-        await update.message.reply_text(f"рж╕ржорж╕рзНржпрж╛: {e}")
+        await update.message.reply_text(f"সমস্যা: {e}")
+
 
 # Show messages
 @permission_required
 async def show_messages(update: Update, context: ContextTypes.DEFAULT_TYPE):
     client = user_clients.get(update.effective_user.id)
     if not client:
-        await update.message.reply_text("тЪая╕П ржЖржЧрзЗ /login ржХрж░рзБржиред")
+        await update.message.reply_text("⚠️ আগে /login করুন।")
         return
     try:
         msgs = client.messages.list(limit=20)
         incoming = [msg for msg in msgs if msg.direction == "inbound"]
         if not incoming:
-            await update.message.reply_text("ржХрзЛржирзЛ Incoming Message ржкрж╛ржУрзЯрж╛ ржпрж╛рзЯржирж┐ред")
+            await update.message.reply_text("কোনো Incoming Message পাওয়া যায়নি।")
             return
         output = "\n\n".join([f"From: {m.from_}\nTo: {m.to}\nBody: {m.body}" for m in incoming[:5]])
         await update.message.reply_text(output)
     except Exception as e:
         logging.exception("Show messages error:")
-        await update.message.reply_text(f"рж╕ржорж╕рзНржпрж╛: {e}")
+        await update.message.reply_text(f"সমস্যা: {e}")
 
 # Delete number
 @permission_required
 async def delete_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
     client = user_clients.get(update.effective_user.id)
     if not client:
-        await update.message.reply_text("тЪая╕П ржЖржЧрзЗ /login ржХрж░рзБржиред")
+        await update.message.reply_text("⚠️ আগে /login করুন।")
         return
     try:
         numbers = client.incoming_phone_numbers.list(limit=1)
         if not numbers:
-            await update.message.reply_text("ржирж╛ржорзНржмрж╛рж░ ржЦрзБржБржЬрзЗ ржкрж╛ржУрзЯрж╛ ржпрж╛рзЯржирж┐ред")
+            await update.message.reply_text("নাম্বার খুঁজে পাওয়া যায়নি।")
             return
         numbers[0].delete()
-        await update.message.reply_text("тЬЕ ржирж╛ржорзНржмрж╛рж░ ржбрж┐рж▓рж┐ржЯ рж╣рзЯрзЗржЫрзЗред")
+        await update.message.reply_text("✅ নাম্বার ডিলিট হয়েছে।")
     except Exception as e:
         logging.exception("Delete number error:")
-        await update.message.reply_text(f"ржбрж┐рж▓рж┐ржЯ ржХрж░рждрзЗ рж╕ржорж╕рзНржпрж╛: {e}")
+        await update.message.reply_text(f"ডিলিট করতে সমস্যা: {e}")
 
 # My numbers
 @permission_required
 async def my_numbers(update: Update, context: ContextTypes.DEFAULT_TYPE):
     client = user_clients.get(update.effective_user.id)
     if not client:
-        await update.message.reply_text("тЪая╕П ржЖржЧрзЗ /login ржХрж░рзБржиред")
+        await update.message.reply_text("⚠️ আগে /login করুন।")
         return
     try:
         numbers = client.incoming_phone_numbers.list()
         if not numbers:
-            await update.message.reply_text("ржЖржкржирж╛рж░ ржХрзЛржирзЛ ржирж╛ржорзНржмрж╛рж░ ржирзЗржЗред")
+            await update.message.reply_text("আপনার কোনো নাম্বার নেই।")
             return
         keyboard = [[InlineKeyboardButton(n.phone_number, callback_data=f"DELETE:{n.phone_number}")] for n in numbers]
-        await update.message.reply_text("ржЖржкржирж╛рж░ ржирж╛ржорзНржмрж╛рж░ржЧрзБрж▓рзЛ:", reply_markup=InlineKeyboardMarkup(keyboard))
+        await update.message.reply_text("আপনার নাম্বারগুলো:", reply_markup=InlineKeyboardMarkup(keyboard))
     except Exception as e:
         logging.exception("My numbers error:")
-        await update.message.reply_text(f"рж╕ржорж╕рзНржпрж╛: {e}")
+        await update.message.reply_text(f"সমস্যা: {e}")
 
 # Admin Management
 async def add_admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS:
-        await update.message.reply_text("тЭМ ржЖржкржирж┐ ржПржЗ ржХржорж╛ржирзНржб ржмрзНржпржмрж╣рж╛рж░ ржХрж░рждрзЗ ржкрж╛рж░ржмрзЗржи ржирж╛ред")
+        await update.message.reply_text("❌ আপনি এই কমান্ড ব্যবহার করতে পারবেন না।")
         return
     try:
         new_admin = int(context.args[0])
         if new_admin not in ADMIN_IDS:
             ADMIN_IDS.append(new_admin)
             user_permissions[new_admin] = float("inf")
-            await update.message.reply_text(f"тЬЕ {new_admin} ржПржЦржи Admin!")
+            await update.message.reply_text(f"✅ {new_admin} এখন Admin!")
         else:
-            await update.message.reply_text("ржЗржЙржЬрж╛рж░ ржЗрждрж┐ржоржзрзНржпрзЗржЗ Adminред")
+            await update.message.reply_text("ইউজার ইতিমধ্যেই Admin।")
     except:
-        await update.message.reply_text("тЭМ рж╕ржарж┐ржХржнрж╛ржмрзЗ user_id ржжрж┐ржиред")
+        await update.message.reply_text("❌ সঠিকভাবে user_id দিন।")
 
 async def remove_admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     if user_id not in ADMIN_IDS or len(ADMIN_IDS) <= 1:
-        await update.message.reply_text("тЭМ ржПржЗ ржХржорж╛ржирзНржб ржЖржкржирж╛рж░ ржЬржирзНржп ржирж╛ред")
+        await update.message.reply_text("❌ এই কমান্ড আপনার জন্য না।")
         return
     try:
         target_id = int(context.args[0])
         if target_id in ADMIN_IDS and target_id != user_id:
             ADMIN_IDS.remove(target_id)
             user_permissions.pop(target_id, None)
-            await update.message.reply_text(f"тЬЕ {target_id} ржХрзЗ Admin ржерзЗржХрзЗ рж╕рж░рж╛ржирзЛ рж╣рзЯрзЗржЫрзЗред")
+            await update.message.reply_text(f"✅ {target_id} কে Admin থেকে সরানো হয়েছে।")
         else:
-            await update.message.reply_text("тЭМ ржнрзБрж▓ ржЖржЗржбрж┐ред")
+            await update.message.reply_text("❌ ভুল আইডি।")
     except:
-        await update.message.reply_text("тЭМ рж╕ржарж┐ржХржнрж╛ржмрзЗ user_id ржжрж┐ржиред")
+        await update.message.reply_text("❌ সঠিকভাবে user_id দিন।")
 
 async def list_admins(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS:
-        await update.message.reply_text("тЭМ ржЖржкржирж┐ ржПржЗ ржХржорж╛ржирзНржб ржмрзНржпржмрж╣рж╛рж░ ржХрж░рждрзЗ ржкрж╛рж░ржмрзЗржи ржирж╛ред")
+        await update.message.reply_text("❌ আপনি এই কমান্ড ব্যবহার করতে পারবেন না।")
         return
-    msg = "ЁЯЫбя╕П Admin List:\n\n"
+    msg = "🛡️ Admin List:\n\n"
     for aid in ADMIN_IDS:
         try:
             user = await context.bot.get_chat(aid)
-            msg += f"{user.full_name} тАФ @{user.username or 'N/A'} (ID: {aid})\n"
+            msg += f"{user.full_name} — @{user.username or 'N/A'} (ID: {aid})\n"
         except:
             msg += f"Unknown (ID: {aid})\n"
     await update.message.reply_text(msg)
 
 async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS:
-        await update.message.reply_text("тЭМ ржЖржкржирж┐ ржПржЗ ржХржорж╛ржирзНржб ржмрзНржпржмрж╣рж╛рж░ ржХрж░рждрзЗ ржкрж╛рж░ржмрзЗржи ржирж╛ред")
+        await update.message.reply_text("❌ আপনি এই কমান্ড ব্যবহার করতে পারবেন না।")
         return
     msg = " ".join(context.args)
     success = fail = 0
@@ -269,7 +269,7 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
             success += 1
         except:
             fail += 1
-    await update.message.reply_text(f"тЬЕ ржкрж╛ржарж╛ржирзЛ рж╣рзЯрзЗржЫрзЗ: {success}, тЭМ ржмрзНржпрж░рзНрже: {fail}")
+    await update.message.reply_text(f"✅ পাঠানো হয়েছে: {success}, ❌ ব্যর্থ: {fail}")
 
 # Button callback
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -279,28 +279,16 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data = query.data
 
     if data.startswith("BUY:"):
-    number = data.split("BUY:")[1]
-    client = user_clients.get(user_id)
-    if not client:
-        await query.edit_message_text("тЪая╕П ржЖржЧрзЗ /login ржХрж░рзБржиред")
-        return
-    try:
-        existing = client.incoming_phone_numbers.list(limit=1)
-        if existing:
-            warn_msg = await query.edit_message_text("тЪая╕П ржжрзЯрж╛ ржХрж░рзЗ ржЖржкржирж╛рж░ ржЖржЧрзЗрж░ ржирж╛ржорзНржмрж╛рж░ ржЯрж┐ /delete_number ржХржорж╛ржирзНржб ржмрзНржпржмрж╣рж╛рж░ ржХрж░рзЗ ржбрж┐рж▓рзЗржЯ ржХрж░рзБржи")
-            # 10 рж╕рзЗржХрзЗржирзНржб ржкрж░ ржбрж┐рж▓рж┐ржЯ ржХрж░рж╛ рж╣ржмрзЗ
-            await asyncio.sleep(10)
-            try:
-                await context.bot.delete_message(chat_id=query.message.chat_id, message_id=warn_msg.message_id)
-            except:
-                pass  # ржпржжрж┐ ржПрж░ржоржзрзНржпрзЗ ржЗржЙржЬрж╛рж░ ржбрж┐рж▓рж┐ржЯ ржХрж░рзЗ ржлрзЗрж▓рзЗ
+        number = data.split("BUY:")[1]
+        client = user_clients.get(user_id)
+        if not client:
+            await query.edit_message_text("⚠️ আগে /login করুন।")
             return
-
-        purchased = client.incoming_phone_numbers.create(phone_number=number)
-        await query.edit_message_text(f"тЬЕ ржЖржкржирж┐ ржирж╛ржорзНржмрж╛рж░ржЯрж┐ ржХрж┐ржирзЗржЫрзЗржи: {purchased.phone_number}")
-    except Exception as e:
-        await query.edit_message_text(f"ржирж╛ржорзНржмрж╛рж░ ржХрзЗржирж╛ ржпрж╛рзЯржирж┐: {e}")
-
+        try:
+            purchased = client.incoming_phone_numbers.create(phone_number=number)
+            await query.edit_message_text(f"✅ আপনি নাম্বারটি কিনেছেন: {purchased.phone_number}")
+        except Exception as e:
+            await query.edit_message_text(f"নাম্বার কেনা যায়নি: {e}")
 
     elif data.startswith("DELETE:"):
         number = data.split("DELETE:")[1]
@@ -309,14 +297,14 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             nums = client.incoming_phone_numbers.list(phone_number=number)
             if nums:
                 nums[0].delete()
-                await query.edit_message_text(f"тЬЕ ржирж╛ржорзНржмрж╛рж░ {number} ржбрж┐рж▓рж┐ржЯ рж╣рзЯрзЗржЫрзЗред")
+                await query.edit_message_text(f"✅ নাম্বার {number} ডিলিট হয়েছে।")
             else:
-                await query.edit_message_text("ржирж╛ржорзНржмрж╛рж░ ржкрж╛ржУрзЯрж╛ ржпрж╛рзЯржирж┐ред")
+                await query.edit_message_text("নাম্বার পাওয়া যায়নি।")
         except Exception as e:
-            await query.edit_message_text(f"ржирж╛ржорзНржмрж╛рж░ ржбрж┐рж▓рж┐ржЯ ржХрж░рждрзЗ рж╕ржорж╕рзНржпрж╛: {e}")
+            await query.edit_message_text(f"নাম্বার ডিলিট করতে সমস্যা: {e}")
 
     elif data == "CANCEL":
-        await query.edit_message_text("ржирж╛ржорзНржмрж╛рж░ ржирж┐рж░рзНржмрж╛ржЪржи ржмрж╛рждрж┐рж▓ ржХрж░рж╛ рж╣рзЯрзЗржЫрзЗред")
+        await query.edit_message_text("নাম্বার নির্বাচন বাতিল করা হয়েছে।")
 
     elif data.startswith("PLAN:"):
         plan = data.split(":")[1]
@@ -330,17 +318,17 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         }
         if plan == "1h":
             if user_id in user_used_free_plan:
-                await query.edit_message_text("ржЖржкржирж┐ ржЗрждрж┐ржоржзрзНржпрзЗржЗ ржлрзНрж░рж┐ ржкрзНрж▓рж╛ржи ржмрзНржпржмрж╣рж╛рж░ ржХрж░рзЗржЫрзЗржиред")
+                await query.edit_message_text("আপনি ইতিমধ্যেই ফ্রি প্লান ব্যবহার করেছেন।")
                 return
             user_used_free_plan.add(user_id)
             user_permissions[user_id] = time.time() + 3600
-            await query.edit_message_text("тЬЕ ржЖржкржирж┐ рзз ржШржирзНржЯрж╛рж░ ржЬржирзНржп ржлрзНрж░рж┐ ржкрзНрж▓рж╛ржи ржПржХржЯрж┐ржн ржХрж░рзЗржЫрзЗржиред")
+            await query.edit_message_text("✅ আপনি ১ ঘন্টার জন্য ফ্রি প্লান একটিভ করেছেন।")
             return
         if plan in prices:
             _, label, cost = prices[plan]
             msg = (
                 f"Please send {cost} to Binance Pay ID: 469628989\n"
-                f"ржкрзЗржорзЗржирзНржЯ ржХрж░рж╛рж░ ржкрж░ ржкрзНрж░рзБржн ржкрж╛ржарж╛ржи Admin ржХрзЗ\n\n"
+                f"পেমেন্ট করার পর প্রুভ পাঠান Admin কে\n\n"
                 f"User ID: {user_id}\nUsername: {username}\nPlan: {label} - {cost}"
             )
             await query.edit_message_text(msg)
