@@ -2,12 +2,6 @@ from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 from twilio.rest import Client
 from keep_alive import keep_alive
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-import random
-import time
-from telegram import Update
-from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
-from datetime import datetime
 from datetime import timedelta
 import time
 import logging
@@ -110,33 +104,6 @@ async def active_users(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"тП│ Time Left: {duration}\n\n"
         )
     await update.message.reply_text(msg)
-
-# Canadian area codes list (example, you can add more)
-canadian_area_codes = [
-    '416', '647', '905', '613', '519', '438', '514', '403', '204', '306',
-    '705', '902', '778', '587', '250', '604', '819', '807', '905', '819', '905'
-]
-
-# This function will send the daily message with 3 random area codes
-async def send_daily_message(context):
-    user_ids = [6165060012]  # List of user IDs to send the message (could be dynamic based on active users)
-    random_area_codes = random.sample(canadian_area_codes, 3)  # Select 3 random area codes
-
-    message = f"আপনার দিনটি শুভ হোক 🌸\nআজকের কিছু Working Area কোড হচ্ছে: {', '.join(random_area_codes)}"
-    
-    for user_id in user_ids:
-        try:
-            await context.bot.send_message(chat_id=user_id, text=message)
-        except Exception as e:
-            print(f"Error sending message to {user_id}: {e}")
-
-# Schedule the daily message at 2 AM
-def schedule_daily_message(app):
-    scheduler = AsyncIOScheduler(timezone="Asia/Dhaka")
-    scheduler.add_job(send_daily_message, 'cron', hour=2, minute=0, args=[app])
-    scheduler.start()
-
-
 
 # Twilio login
 @permission_required
