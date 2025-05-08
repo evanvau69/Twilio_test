@@ -41,7 +41,7 @@ def permission_required(func):
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "স্বাগতম Evan Bot-এ 🌺 কাজ করার জন্য নিচের কমান্ড গুলো ব্যবহার করতে পারেন!\n\n"
+        "স্বাগতম Evan Bot-এ 🌸 কাজ করার জন্য নিচের কমান্ড গুলো ব্যবহার করতে পারেন!\n\n"
         "/login <SID> <TOKEN>\n"
         "/buy_number <Area Code>\n"
         "/show_messages\n"
@@ -123,35 +123,36 @@ async def login(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # Buy number
 @permission_required
 async def buy_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    client = user_clients.get(user_id)
+    user_id = update.effective_user.id
+    client = user_clients.get(user_id)
 
-    if not client:
-        await update.message.reply_text("⚠️ আগে /login করুন।")
-        return
+    if not client:
+        await update.message.reply_text("⚠️ আগে /login করুন।")
+        return
 
-    try:
-        area_code = context.args[0] if context.args else None
-        if area_code:
-            numbers = client.available_phone_numbers("CA").local.list(area_code=area_code, limit=10)
-        else:
-            numbers = client.available_phone_numbers("CA").local.list(limit=10)
+    try:
+        if context.args:
+            area_code = context.args[0]
+            numbers = client.available_phone_numbers("CA").local.list(area_code=area_code, limit=10)
+        else:
+            numbers = client.available_phone_numbers("CA").local.list(limit=10)
 
-        if not numbers:
-            await update.message.reply_text("নাম্বার পাওয়া যায়নি।")
-            return
+        if not numbers:
+            await update.message.reply_text("নাম্বার পাওয়া যায়নি।")
+            return
 
-        user_available_numbers[user_id] = [n.phone_number for n in numbers]
-        keyboard = [[InlineKeyboardButton(n.phone_number, callback_data=f"BUY:{n.phone_number}")] for n in numbers]
-        keyboard.append([InlineKeyboardButton("Cancel ❌", callback_data="CANCEL")])
+        user_available_numbers[user_id] = [n.phone_number for n in numbers]
+        keyboard = [[InlineKeyboardButton(n.phone_number, callback_data=f"BUY:{n.phone_number}")] for n in numbers]
+        keyboard.append([InlineKeyboardButton("Cancel ❌", callback_data="CANCEL")])
 
-        await update.message.reply_text(
-            "নিচের নাম্বারগুলো পাওয়া গেছে:\n\n" + "\n".join(user_available_numbers[user_id]),
-            reply_markup=InlineKeyboardMarkup(keyboard)
-        )
-    except Exception as e:
-        logging.exception("Buy number error:")
-        await update.message.reply_text(f"সমস্যা: {e}")
+        await update.message.reply_text(
+            "নিচের নাম্বারগুলো পাওয়া গেছে:\n\n" + "\n".join(user_available_numbers[user_id]),
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
+
+    except Exception as e:
+        logging.exception("Buy number error:")
+        await update.message.reply_text(f"সমস্যা: {e}")
 
 
 # Show messages
