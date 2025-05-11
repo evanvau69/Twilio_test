@@ -309,7 +309,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         plan = data.split(":")[1]
         username = f"@{query.from_user.username}" if query.from_user.username else "N/A"
         prices = {
-            "30Minute": (1700, "30 Minute", "$FREE"),
+            "30Minute": (1800, "30 Minute", "$FREE"),
             "1d": (86400, "1 Day", "$2"),
             "7d": (604800, "7 Day", "$10"),
             "15d": (1296000, "15 Day", "$15"),
@@ -320,7 +320,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await query.edit_message_text("আপনি ইতিমধ্যেই ফ্রি প্লান ব্যবহার করেছেন।")
                 return
             user_used_free_plan.add(user_id)
-            user_permissions[user_id] = time.time() + 3600
+            user_permissions[user_id] = time.time() + 1800
             await query.edit_message_text("✅ আপনি ৩০ মিনিটের জন্য ফ্রি প্লান একটিভ করেছেন।")
             return
         if plan in prices:
@@ -335,7 +335,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # Start bot
 def main():
     keep_alive()
-    TOKEN = "7253583924:AAENVbdYNjHdbKHV0SJhnhoomyeOM2YeLXc"
+    TOKEN ="7253583924:AAENVbdYNjHdbKHV0SJhnhoomyeOM2YeLXc"
     app = Application.builder().token(TOKEN).build()
 
     app.add_handler(CommandHandler("start", start))
