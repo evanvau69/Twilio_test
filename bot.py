@@ -25,7 +25,7 @@ def permission_required(func):
         expire_time = user_permissions.get(user_id, 0)
         if time.time() > expire_time:
             keyboard = [
-                [InlineKeyboardButton("1 Hour - $FREE", callback_data="PLAN:1h")],
+                [InlineKeyboardButton("30 Minute - $FREE", callback_data="PLAN:30m")],
                 [InlineKeyboardButton("1 Day - $2", callback_data="PLAN:1d")],
                 [InlineKeyboardButton("7 Day - $10", callback_data="PLAN:7d")],
                 [InlineKeyboardButton("15 Day - $15", callback_data="PLAN:15d")],
@@ -41,7 +41,7 @@ def permission_required(func):
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "স্বাগতম Evan Bot-এ 🥲 কাজ করার জন্য নিচের কমান্ড গুলো ব্যবহার করতে পারেন!\n\n"
+        "স্বাগতম 「* 𝙏𝘼𝙎𝙆 メ 𝙏𝙍𝙀𝘼𝙎𝙐𝙍𝙀 」-এ 🤍 কাজ করার জন্য নিচের কমান্ড গুলো ব্যবহার করতে পরবেন!\n\n"
         "/login <SID> <TOKEN>\n"
         "/buy_number \n"
         "/show_messages\n"
@@ -101,7 +101,7 @@ async def active_users(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"🆔 ID: {uid}\n"
             f"🔗 Username: {username}\n"
             f"⏳ Time Left: {duration}\n\n"
-            f"___________________\n"
+            f"_________________________\n"
         )
     await update.message.reply_text(msg)
 
@@ -191,7 +191,7 @@ async def delete_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("✅ নাম্বার ডিলিট হয়েছে।")
     except Exception as e:
         logging.exception("Delete number error:")
-        await update.message.reply_text(f"ডিলিট করতে সমস্যা: আপনার Token এ সমস্যা দয়া করে Token চেঞ্জ করুন ")
+        await update.message.reply_text(f"ডিলিট হয়নি আপনার Token এ সমস্যা দয়া করে Token চেঞ্জ করুন ")
 
 # My numbers
 @permission_required
@@ -285,9 +285,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
         try:
             purchased = client.incoming_phone_numbers.create(phone_number=number)
-            await query.edit_message_text(f"✅ আপনি নাম্বারটি কিনেছেন: {purchased.phone_number}")
+            await query.edit_message_text(f"✅ আপনি নাম্বারটি কিনা হয়েছে: {purchased.phone_number}")
         except Exception as e:
-            await query.edit_message_text(f"নাম্বার কেনা যায়নি: দয়া করে আপনার আগের নাম্বার ডিলেট করুন অথবা আপনার Token এ সমস্যা দয়া করে Token চেঞ্জ করুন")
+            await query.edit_message_text(f"নাম্বার কেনা যায়নি দয়া করে আপনার আগের নাম্বার ডিলেট করুন অথবা আপনার Token এ সমস্যা দয়া করে Token চেঞ্জ করুন")
 
     elif data.startswith("DELETE:"):
         number = data.split("DELETE:")[1]
@@ -300,7 +300,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             else:
                 await query.edit_message_text("নাম্বার পাওয়া যায়নি।")
         except Exception as e:
-            await query.edit_message_text(f"নাম্বার ডিলিট করতে সমস্যা আপনার Token এ সমস্যা দয়া করে Token চেঞ্জ করুন ")
+            await query.edit_message_text(f"নাম্বার ডিলিট করা যায়নি আপনার Token এ সমস্যা দয়া করে Token চেঞ্জ করুন ")
 
     elif data == "CANCEL":
         await query.edit_message_text("নাম্বার নির্বাচন বাতিল করা হয়েছে।")
@@ -309,19 +309,19 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         plan = data.split(":")[1]
         username = f"@{query.from_user.username}" if query.from_user.username else "N/A"
         prices = {
-            "1h": (3600, "1 Hour", "$FREE"),
+            "30Minute": (1700, "30 Minute", "$FREE"),
             "1d": (86400, "1 Day", "$2"),
             "7d": (604800, "7 Day", "$10"),
             "15d": (1296000, "15 Day", "$15"),
             "30d": (2592000, "30 Day", "$20")
         }
-        if plan == "1h":
+        if plan == "30m":
             if user_id in user_used_free_plan:
                 await query.edit_message_text("আপনি ইতিমধ্যেই ফ্রি প্লান ব্যবহার করেছেন।")
                 return
             user_used_free_plan.add(user_id)
             user_permissions[user_id] = time.time() + 3600
-            await query.edit_message_text("✅ আপনি ১ ঘন্টার জন্য ফ্রি প্লান একটিভ করেছেন।")
+            await query.edit_message_text("✅ আপনি ৩০ মিনিটের জন্য ফ্রি প্লান একটিভ করেছেন।")
             return
         if plan in prices:
             _, label, cost = prices[plan]
