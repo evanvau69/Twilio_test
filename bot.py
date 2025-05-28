@@ -1,4 +1,3 @@
-# main.py
 import asyncio
 from telegram import (
     Update, InlineKeyboardButton, InlineKeyboardMarkup
@@ -6,24 +5,25 @@ from telegram import (
 from telegram.ext import (
     ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
 )
-import os
-from datetime import datetime, timedelta
 
+# ✅ Bot Token & Admin ID
+BOT_TOKEN = "7253583924:AAENVbdYNjHdbKHV0SJhnhoomyeOM2YeLXc"
 ADMIN_ID = 6165060012
-TOKEN = "7253583924:AAENVbdYNjHdbKHV0SJhnhoomyeOM2YeLXc"
 
-# Track user states
+# ✅ Simple in-memory DB
 active_permissions = {}
 free_trial_users = {}
 
+# ✅ Subscription Plans
 plans = {
-    "free": {"label": "⬜ 1 Hour - Free 🌸", "duration": 1, "price": 0},
+    "free": {"label": " 1 Hour - Free 🌸", "duration": 1, "price": 0},
     "1d": {"label": "🔴 1 Day - 2$", "duration": 24, "price": 2},
     "7d": {"label": "🟠 7 Day - 10$", "duration": 168, "price": 10},
     "15d": {"label": "🟡 15 Day - 15$", "duration": 360, "price": 15},
     "30d": {"label": "🟢 30 Day - 20$", "duration": 720, "price": 20},
 }
 
+# ✅ Subscription Options
 def get_main_buttons():
     return InlineKeyboardMarkup([
         [InlineKeyboardButton(plans["free"]["label"], callback_data="free")],
@@ -33,55 +33,60 @@ def get_main_buttons():
         [InlineKeyboardButton(plans["30d"]["label"], callback_data="30d")],
     ])
 
+# ✅ /start Handler
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     chat_id = update.effective_chat.id
 
     if active_permissions.get(user.id):
-        await context.bot.send_message(chat_id=chat_id, text=f"{user.first_name} Subscription চালু আছে ✅\nএবার Log In করুন।",
-                                       reply_markup=InlineKeyboardMarkup([
-                                           [InlineKeyboardButton("Login 🔑", callback_data="login")]
-                                       ]))
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text=f"{user.first_name} Subscription চালু আছে ✅\nএবার Log In করুন।",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("Login 🔑", callback_data="login")]
+            ])
+        )
         return
 
     msg = await update.message.reply_text(
-        f"Welcome {user.first_name} 🌸\nআপনি কোনটি নিতে চাচ্ছেন..?",
+        f"Welcome ×͜× ✿𝙴𝚅𝙰𝙽✿ ×͜× 🌸\nআপনি কোনটি নিতে চাচ্ছেন..?",
         reply_markup=get_main_buttons()
     )
-
     context.user_data['menu_msg_id'] = msg.message_id
 
+# ✅ Button Handler
 async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
+    await query.answer()
     user = query.from_user
     chat_id = query.message.chat_id
     plan_key = query.data
-    await query.answer()
 
+    # ✅ Delete the button message
+    await context.bot.delete_message(chat_id=chat_id, message_id=query.message.message_id)
+
+    # ✅ Free Trial
     if plan_key == "free":
         if free_trial_users.get(user.id):
             await context.bot.send_message(chat_id=chat_id, text="❌ আপনি আগে থেকেই Free Trial ব্যবহার করেছেন!")
             return
 
-        # Grant permission
+        # Grant free trial
         active_permissions[user.id] = True
         free_trial_users[user.id] = True
 
-        # Delete old message
-        try:
-            await context.bot.delete_message(chat_id=chat_id, message_id=context.user_data.get('menu_msg_id'))
-        except:
-            pass
-
         await context.bot.send_message(chat_id=chat_id, text="✅ আপনার Free Trial Subscription টি চালু হয়েছে!")
 
-        # Schedule permission removal
+        # Auto revoke after 1 hour
         await asyncio.sleep(plans["free"]["duration"] * 3600)
         active_permissions.pop(user.id, None)
         await context.bot.send_message(chat_id=chat_id, text="🌻 আপনার Free Trial টি শেষ হতে যাচ্ছে।")
 
+    # ✅ Paid Plans
     elif plan_key in plans:
         plan = plans[plan_key]
+
+        # Notify Admin
         msg = await context.bot.send_message(
             chat_id=ADMIN_ID,
             text=f"""(User {user.full_name}) {plan['duration']} ঘণ্টার Subscription নিতে চাচ্ছে।
@@ -98,7 +103,7 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         context.user_data[f"admin_msg_{user.id}"] = msg.message_id
 
-        # Notify user for payment
+        # Ask user to pay
         await context.bot.send_message(
             chat_id=chat_id,
             text=f"""Please send ${plan['price']} to Binance Pay ID: 
@@ -108,10 +113,10 @@ Your payment details:
 🆔 User ID: {user.id}
 👤 Username: @{user.username or 'N/A'}
 📋 Plan: {plan['label']}
-💰 Amount: ${plan['price']}
-"""
+💰 Amount: ${plan['price']}"""
         )
 
+# ✅ Admin APPROVE / CANCEL
 async def admin_action(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -123,16 +128,20 @@ async def admin_action(update: Update, context: ContextTypes.DEFAULT_TYPE):
         active_permissions[uid] = True
         await query.edit_message_text(f"✅ APPROVED for User ID: {uid}")
         await context.bot.send_message(chat_id=uid, text="🎉 আপনার Subscription Approved হয়েছে!")
+
     elif data.startswith("cancel"):
         _, uid = data.split(":")
+        uid = int(uid)
         await query.edit_message_text(f"❌ Subscription Cancelled for User ID: {uid}")
-        await context.bot.send_message(chat_id=int(uid), text="❌ আপনার Subscription Cancelled হয়েছে।")
+        await context.bot.send_message(chat_id=uid, text="❌ আপনার Subscription Cancelled হয়েছে।")
 
-if __name__ == "__main__":
-    app = ApplicationBuilder().token(TOKEN).build()
+# ✅ Main
+if __name__ == "__bot__":
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
+
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(handle_button, pattern="^(free|1d|7d|15d|30d)$"))
     app.add_handler(CallbackQueryHandler(admin_action, pattern="^(approve|cancel):"))
 
-    print("Bot running...")
+    print("Bot is running...")
     app.run_polling()
